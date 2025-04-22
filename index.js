@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const bodyParser = require('body-parser');
+const dns = require('dns');
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -23,24 +24,26 @@ app.get('/api/hello', function(req, res) {
 
 const links = [];
 
-function isValidUrl(url){
+function getHostname(url){
   try {
-    new URL(url);
-    return true;
+    const data = new URL(url);
+    return data.hostname;
   } catch (err) {
-    return false;
+    return null;
   }
 }
 
 app.post('/api/shorturl', function(req, res){
   const url = req.body.url;
-  if (isValidUrl(url)){
-    links.push(url);
-    const shortlink = links.indexOf(url) + 1;
-    res.json({original_url: url, short_url: shortlink})
-  } else {
-    res.json({error: "invalid url"});
-  }
+  dns.lookup(getHostname(url), (err, address, family) => {
+    if (err) {
+      res.json({error: 'invalid url'});
+    } else {
+      links.push(url);
+      const shortlink = links.indexOf(url) + 1;
+      res.json({original_url: url, short_url: shortlink})
+    }
+  })
 })
 
 app.get('/api/shorturl/:shortlink', function(req, res){
