@@ -3,8 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const bodyParser = require('body-parser');
-const dns = require('dns');
-const { SocketAddress } = require('net');
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -25,21 +23,23 @@ app.get('/api/hello', function(req, res) {
 
 const links = [];
 
-app.post('/api/shorturl', function(req, res, next){
+function isValidUrl(url){
+  try {
+    new URL(url);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+app.post('/api/shorturl', function(req, res){
   const url = req.body.url;
-  dns.lookup(url, (error, SocketAddress, family) => {
-    if(error) {
-      res.json({"error": "invalid url"})
-    } else {
-      links.push(url);
-      req.link = url;
-      req.shortlink = links.indexOf(url) + 1;
-    }
-  })
-  next();
-}, function(req, res){
-  if (req.shortlink){
-    res.json({"original_url": req.link, "short_url": req.shortlink})
+  if (isValidUrl(url)){
+    links.push(url);
+    const shortlink = links.indexOf(url) + 1;
+    res.json({"original_url": url, "short_url": shortlink})
+  } else {
+    res.json({"error": "invalid url"});
   }
 })
 
