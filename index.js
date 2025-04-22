@@ -37,9 +37,9 @@ app.post('/api/shorturl', function(req, res){
   if (isValidUrl(url)){
     links.push(url);
     const shortlink = links.indexOf(url) + 1;
-    res.json({"original_url": url, "short_url": shortlink})
+    res.json({original_url: url, short_url: shortlink})
   } else {
-    res.json({"error": "invalid url"});
+    res.json({error: "invalid url"});
   }
 })
 
